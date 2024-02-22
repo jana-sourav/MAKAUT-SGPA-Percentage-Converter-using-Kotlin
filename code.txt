@@ -1,0 +1,139 @@
+package com.example.sgpaandpercentageconverter
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.example.sgpaandpercentageconverter.ui.theme.SGPAAndPercentageConverterTheme
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            SGPAAndPercentageConverterTheme {
+                // A surface container using the 'background' color from the theme
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    sgpaConverter()
+                }
+            }
+        }
+    }
+}
+
+
+@Composable
+fun sgpaConverter(){
+
+    var sem1SGPA by remember { mutableStateOf("") }
+    var sem2SGPA by remember { mutableStateOf("") }
+    var percentage by remember { mutableStateOf("") }
+    var OverallSGPA by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf<String?>(null) } // State to hold error message, initially null
+
+    fun SGPAConvert() {
+        // Validate input
+        if (sem1SGPA.isBlank() || sem2SGPA.isBlank()) {
+            errorMessage = "Please enter values for both Sem1 SGPA and Sem2 SGPA"
+            return
+        }
+
+        try {
+            // Parse input to double
+            val sem1SGPAValue = sem1SGPA.toDouble()
+            val sem2SGPAValue = sem2SGPA.toDouble()
+
+            // Validate input range
+            if (sem1SGPAValue < 0 || sem1SGPAValue > 10 || sem2SGPAValue < 0 || sem2SGPAValue > 10) {
+                errorMessage = "SGPA values must be between 0 and 10"
+                return
+            }
+
+            // Overall SGPA
+            val YGPA = (sem1SGPAValue + sem2SGPAValue) / 2
+
+            // Percentage Calculation
+            val Percent = (YGPA - 0.75) * 10
+
+            percentage = String.format("%.2f", Percent) // Format the percentage with two decimal places
+            OverallSGPA = String.format("%.2f", YGPA)   // Format the overall SGPA with two decimal places
+
+            // Clear error message if no errors
+            errorMessage = null
+
+        } catch (e: NumberFormatException) {
+            errorMessage = "Invalid input. Please enter valid numbers."
+        }
+    }
+
+    Column(modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+
+    ) {
+        Text(text = "SGPA Converter")
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Row {
+            OutlinedTextField(
+                value = sem1SGPA,
+                onValueChange = {
+                    sem1SGPA = it
+                },
+                label = { Text("Sem1 SGPA") },
+                modifier = Modifier.weight(1f)
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            OutlinedTextField(
+                value = sem2SGPA,
+                onValueChange = {
+                    sem2SGPA = it
+                },
+                label = { Text("Sem2 SGPA") },
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(onClick = { SGPAConvert() }) {
+            Text(text = "Convert")
+        }
+
+        // Display error message if present
+        errorMessage?.let { message ->
+            Text(text = message, color = Color.Red)
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+
+        // Display result only if there are no errors
+        if (errorMessage == null) {
+            Text(text = "Percentage: $percentage")
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(text = "Overall SGPA : $OverallSGPA")
+        }
+    }
+}
